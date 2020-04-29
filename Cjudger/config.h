@@ -19,10 +19,12 @@ const int JudgeOLE = 8; //Output Limit Exceeded
 const int JudgePE  = 9; //Presentation Error
 const int JudgeNA  = 10; //None
 
-const int LangN 	= 0;
-const int LangC 	= 1;
-const int LangCC	= 2;
-const int LangJava 	= 3;
+const int LangN 	    = 0;
+const int LangC 	    = 1;
+const int LangCC	    = 2;
+const int LangJava 	    = 3;
+const int LangPy2 	    = 4;
+const int LangPy3 	    = 5;
 
 #ifdef __i386
 #define REG_SYSCALL orig_eax

@@ -148,6 +148,10 @@ func (this *solution) get_sim(Sid, Language int) (sim, Sim_s_id int) {
 		extension = "cc"
 	} else if this.Language == config.LanguageJAVA {
 		extension = "java"
+	} else if this.Language == config.LanguagePY2 {
+		extension = "py2"
+	} else if this.Language == config.LanguagePY3 {
+		extension = "py3"
 	}
 
 	qry := make(map[string]string)

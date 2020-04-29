@@ -56,7 +56,7 @@ static char record_call = 0;
 
 char work_dir[1024];
 
-static char lang_ext[3][8] = { "c", "cc", "java"};
+static char lang_ext[5][8] = { "c", "cc", "java", "py2", "py3"};
 static int time_lmt = 5, mem_lmt = 128, lang;//单位是second and MB
 
 //获取文件大小
@@ -125,6 +125,9 @@ void init_syscalls_limits(int lang){
     }else if (lang == LangJava){     // Java
         for (i = 0; LANG_JC[i]; i++)
             call_counter[LANG_JV[i]] = LANG_JC[i];
+    }else if(lang == LangPy2 || lang == LangPy3){ // py2 & py3
+        for (i = 0; i == 0 || LANG_PV[i]; i++)
+			call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
     }
 }
 
@@ -276,14 +279,14 @@ void run_solution(char *infile, int &usedtime){
     freopen("user.out", "w", stdout);
     freopen("error.out", "a+", stderr);
     if(DEBUG){
-        printf("%s\n", infile);
+        write_log("infile: %s\n", infile);
     }
 
     // trace me
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 
     // run me
-    if (lang != LangJava){
+    if (lang != LangJava && lang != LangPy2 && lang != LangPy3){
         chroot(work_dir);
     }
     
@@ -305,9 +308,11 @@ void run_solution(char *infile, int &usedtime){
     
     // proc limit
     if(lang == LangJava){  //java
-        LIM.rlim_cur=LIM.rlim_max = 1000;
+        LIM.rlim_cur = LIM.rlim_max = 1000;
+    }else if(lang == LangPy2 || lang == LangPy3){
+        LIM.rlim_cur = LIM.rlim_max = 200;
     }else{
-        LIM.rlim_cur=LIM.rlim_max = 1;
+        LIM.rlim_cur = LIM.rlim_max = 1;
     }
     
     setrlimit(RLIMIT_NPROC, &LIM);
@@ -319,16 +324,22 @@ void run_solution(char *infile, int &usedtime){
     // set the memory
     LIM.rlim_cur = STD_MB *mem_lmt/2*3;
     LIM.rlim_max = STD_MB *mem_lmt*2;
-    if(lang != LangJava){
+    if(lang != LangJava && lang != LangPy2 && lang != LangPy3){
         setrlimit(RLIMIT_AS, &LIM);
     }
-        
+    int rst = 0;
     if(lang == LangC || lang ==LangCC){
-        execl("./Main", "./Main", (char *)NULL);
+        rst = execl("./Main", "./Main", (char *)NULL);
     }else if(lang == LangJava){
-        execl("/usr/bin/java", "/usr/bin/java", "-Xms128M", "-Xms512M",  "-Djava.security.manager", "-Djava.security.policy=./java.policy", "-DONLINE_JUDGE=true", "Main", (char *)NULL );
+        rst = execl("/usr/bin/java", "/usr/bin/java", "-Xms128M", "-Xms512M",  "-Djava.security.manager", "-Djava.security.policy=./java.policy", "-DONLINE_JUDGE=true", "Main", (char *)NULL );
+    }else if(lang == LangPy2){
+        rst = execl("/usr/local/judge/py2", "/usr/local/judge/py2", "./Main.py2", (char *)NULL);
+    }else if(lang == LangPy3){
+        rst = execl("/usr/local/judge/py3", "/usr/local/judge/py3", "./Main.py3", (char *)NULL);
     }
-
+    if(rst == -1){
+        fprintf(stderr, "%s", strerror(errno));
+    }
     exit(0);
 }
 
@@ -359,7 +370,7 @@ int get_page_fault_mem(struct rusage & ruse, pid_t & pidApp){
     if (DEBUG){
         int m_vmpeak = get_proc_status(pidApp, "VmPeak:");
         int m_vmdata = get_proc_status(pidApp, "VmData:");
-        printf("VmPeak:%d KB VmData:%d KB minflt:%d KB\n", m_vmpeak, m_vmdata,
+        fprintf(stderr, "VmPeak:%d KB VmData:%d KB minflt:%d KB\n", m_vmpeak, m_vmdata,
                m_minflt >> 10);
     }
     return m_minflt;
@@ -379,7 +390,7 @@ void watch_solution(
     int tempmemory;
     
     if (DEBUG){
-        printf("pid=%d judging\n", pidApp);
+        fprintf(stderr, "pid=%d judging\n", pidApp);
     }
     
     int status, sig, exitcode;
@@ -409,7 +420,7 @@ void watch_solution(
         
         if (topmemory > mem_lmt * STD_MB){
             if (DEBUG){
-                printf("out of memory %d\n", topmemory);
+                fprintf(stderr, "out of memory %d\n", topmemory);
             }
             
             judge_flag = JudgeMLE;
@@ -442,15 +453,15 @@ void watch_solution(
         }
         
         exitcode = WEXITSTATUS(status);
+        if (DEBUG){
+            fprintf(stderr, "exit code: %d\n", exitcode);
+        }
         /*exitcode == 5 waiting for next CPU allocation
          *  */
         if ((lang == 3 && exitcode == 17) || exitcode == 0x05 || exitcode == 0){
             //go on and on
             ;
         }else{
-            if (DEBUG){
-                printf("status>>8=%d\n", exitcode);
-            }
             //psignal(exitcode, NULL);
             switch (exitcode){
                 case SIGCHLD:
@@ -482,7 +493,7 @@ void watch_solution(
             sig = WTERMSIG(status);
             
             if (DEBUG){
-                printf("WTERMSIG=%d\n", sig);
+                fprintf(stderr, "WTERMSIG=%d\n", sig);
                 psignal(sig, NULL);
             }
             switch (sig){
@@ -566,6 +577,10 @@ void init_parameters(int argc, char **argv){
         time_lmt = time_lmt * 2;
         mem_lmt = mem_lmt * 2;
         execute_cmd( "cp /etc/java-7-openjdk/security/java.policy %s/java.policy", work_dir);
+    }else if (lang == LangPy2 || lang == LangPy3){
+        // the limit for python
+        time_lmt = time_lmt * 2;
+        mem_lmt = mem_lmt * 2;
     }
     
     //never bigger than judged set value;
@@ -643,7 +658,7 @@ int main(int argc, char** argv){
         init_syscalls_limits(lang);
         
         if(DEBUG){
-            printf("%s\n",infile);
+            fprintf(stderr, "%s\n",infile);
         }
         
         pid_t pidApp = fork();

@@ -21,6 +21,8 @@ const (
 	LanguageC    = 1 //C
 	LanguageCPP  = 2 //C++
 	LanguageJAVA = 3 //Java
+	LanguagePY2  = 4 //Python2
+	LanguagePY3  = 5 //Python3
 )
 
 const (

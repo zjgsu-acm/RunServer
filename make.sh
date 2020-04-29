@@ -8,7 +8,7 @@ go install
 echo Compiling runner and compiler
 g++ ./Cjudger/runner.cc -o runner
 g++ ./Cjudger/compiler.cc -o compiler
-mv runner compiler $GOPATH/bin
+mv -f runner compiler $GOPATH/bin
 
 echo Building similarity test
 cd sim/sim_2_89

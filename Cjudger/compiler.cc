@@ -91,6 +91,9 @@ int main(int argc, char* argv[]){
         case LangJava:
             execvp(CP_J[0], (char * const *) CP_J);
             break;
+        case LangPy2:
+        case LangPy3:
+            break;
         default:
             exit(-1);
         }

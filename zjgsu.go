@@ -68,6 +68,10 @@ func (z *ZJGSUJudger) files(user vjudger.UserInterface, workdir string) {
 		codefilename = workdir + "/Main.cc"
 	case config.LanguageJAVA:
 		codefilename = workdir + "/Main.java"
+	case config.LanguagePY2:
+		codefilename = workdir + "/Main.py2"
+	case config.LanguagePY3:
+		codefilename = workdir + "/Main.py3"
 	}
 
 	codefile, err := os.Create(codefilename)
