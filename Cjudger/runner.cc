@@ -405,10 +405,10 @@ void watch_solution(
         if (lang == LangJava){
             tempmemory = get_page_fault_mem(ruse, pidApp);
         }else{    //other use VmPeak
-            tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
-            write_log("VmPeak %d, VmData %d", 
-                get_proc_status(pidApp,"VmPeak:"),
-                get_proc_status(pidApp,"VmData:"));
+            tempmemory = get_proc_status(pidApp, "VmHWM:") << 10;
+            if(Debug) {
+                write_log("VmHWM %d, VmData %d", get_proc_status(pidApp,"VmHWM:"), get_proc_status(pidApp,"VmData:"));
+            }
             if(tempmemory == 0) {
                 tempmemory = get_page_fault_mem(ruse, pidApp);
             }
@@ -568,7 +568,7 @@ void init_parameters(int argc, char **argv){
     
     lang = atoi(argv[1]);
     time_lmt = atoi(argv[2]);
-    mem_lmt = atoi(argv[3])*1024/STD_MB*8;
+    mem_lmt = atoi(argv[3]) * 1024 / STD_MB;
     sprintf(work_dir,"%s", argv[4]);
     
     //java is lucky
@@ -576,7 +576,7 @@ void init_parameters(int argc, char **argv){
         // the limit for java
         time_lmt = time_lmt * 2;
         mem_lmt = mem_lmt * 2;
-        execute_cmd( "cp /etc/java-7-openjdk/security/java.policy %s/java.policy", work_dir);
+        execute_cmd( "cp /etc/java-8-openjdk/security/java.policy %s/java.policy", work_dir);
     }else if (lang == LangPy2 || lang == LangPy3){
         // the limit for python
         time_lmt = time_lmt * 2;
