@@ -333,9 +333,9 @@ void run_solution(char *infile, int &usedtime){
     }else if(lang == LangJava){
         rst = execl("/usr/bin/java", "/usr/bin/java", "-Xms128M", "-Xms512M",  "-Djava.security.manager", "-Djava.security.policy=./java.policy", "-DONLINE_JUDGE=true", "Main", (char *)NULL );
     }else if(lang == LangPy2){
-        rst = execl("/usr/local/judge/py2", "/usr/local/judge/py2", "./Main.py2", (char *)NULL);
+        rst = execl("/usr/local/cjudger/py2", "/usr/local/cjudger/py2", "./Main.py2", (char *)NULL);
     }else if(lang == LangPy3){
-        rst = execl("/usr/local/judge/py3", "/usr/local/judge/py3", "./Main.py3", (char *)NULL);
+        rst = execl("/usr/local/cjudger/py3", "/usr/local/cjudger/py3", "./Main.py3", (char *)NULL);
     }
     if(rst == -1){
         fprintf(stderr, "%s", strerror(errno));
@@ -406,7 +406,7 @@ void watch_solution(
             tempmemory = get_page_fault_mem(ruse, pidApp);
         }else{    //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmHWM:") << 10;
-            if(Debug) {
+            if(DEBUG) {
                 write_log("VmHWM %d, VmData %d", get_proc_status(pidApp,"VmHWM:"), get_proc_status(pidApp,"VmData:"));
             }
             if(tempmemory == 0) {
