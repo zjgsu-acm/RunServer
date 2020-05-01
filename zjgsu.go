@@ -1,17 +1,17 @@
 package main
 
 import (
-	"GoOnlineJudge/model"
-	"RunServer/config"
 	"bytes"
 	"errors"
+	"github.com/ZJGSU-ACM/GoOnlineJudge/model"
+	"github.com/ZJGSU-ACM/RunServer/config"
+	"github.com/ZJGSU-ACM/vjudger"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-	"vjudger"
 )
 
 var ErrCompile = errors.New("compile error")

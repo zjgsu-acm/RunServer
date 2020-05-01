@@ -30,3 +30,5 @@ sim_java
 sim_text
 .DS_Store
 log
+
+.idea/

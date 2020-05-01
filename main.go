@@ -18,10 +18,10 @@
 package main
 
 import (
-	"vjudger"
-
 	"container/list"
 	"encoding/json"
+	"github.com/ZJGSU-ACM/RunServer/config"
+	"github.com/ZJGSU-ACM/vjudger"
 	"io"
 	"log"
 	"net/http"
@@ -53,7 +53,7 @@ func main() {
 	go JudgeForever()
 
 	http.HandleFunc("/", Handler)
-	http.ListenAndServe(":8888", nil)
+	_ = http.ListenAndServe(config.PostHost, nil)
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {

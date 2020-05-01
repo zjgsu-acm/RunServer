@@ -1,6 +1,6 @@
 package config
 
-const PostHost = "http://127.0.0.1:8080"
+const PostHost = ":8888"
 
 const (
 	JudgePD  = 0  //Pending

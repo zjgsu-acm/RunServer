@@ -1,10 +1,9 @@
 package main
 
 import (
-	"GoOnlineJudge/model"
-
-	"RunServer/config"
 	"fmt"
+	"github.com/ZJGSU-ACM/GoOnlineJudge/model"
+	"github.com/ZJGSU-ACM/RunServer/config"
 	"os"
 	"os/exec"
 	"strconv"
