@@ -31,15 +31,11 @@ ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.cn
 
 RUN mkdir -p $GOPATH/src/github.com/ZJGSU-ACM/
-#ADD ./restweb $GOPATH/src/restweb
-#ADD ./github.com/ZJGSU-ACM/vjudger $GOPATH/src/github.com/ZJGSU-ACM/vjudger
-#ADD ./github.com/ZJGSU-ACM/GoOnlineJudge $GOPATH/src/github.com/ZJGSU-ACM/GoOnlineJudge
-ADD ./github.com/ZJGSU-ACM/RunServer $GOPATH/src/github.com/ZJGSU-ACM/RunServer
+ADD . $GOPATH/src/github.com/ZJGSU-ACM/RunServer
 
 # Build OJ
 RUN \
   cd $GOPATH/src/github.com/ZJGSU-ACM/RunServer && \
-  go mod init && \
   ./make.sh
 
 # Define working directory.
