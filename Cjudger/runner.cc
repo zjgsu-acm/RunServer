@@ -277,7 +277,7 @@ void run_solution(char *infile, int &usedtime){
     // open the files
     freopen(infile, "r", stdin);
     freopen("user.out", "w", stdout);
-    freopen("error.out", "a+", stderr);
+    freopen("error.out", "w", stderr);
     if(DEBUG){
         write_log("infile: %s\n", infile);
     }
@@ -436,13 +436,17 @@ void watch_solution(
             break;
         }
         
-        if (WIFEXITED(status)){
-            break;
-        }
-        
         if (get_file_size("error.out")){
+            if(DEBUG) fprintf(stderr, "Found Error.out: %d\n", get_file_size("error.out"));
             judge_flag = JudgeRE;
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
+            break;
+        }
+
+        exitcode = WEXITSTATUS(status);
+        if(DEBUG) fprintf(stderr, "ExitCode: %d\n", exitcode);
+
+        if (WIFEXITED(status)){
             break;
         }
         
@@ -451,11 +455,7 @@ void watch_solution(
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
-        
-        exitcode = WEXITSTATUS(status);
-        if (DEBUG){
-            fprintf(stderr, "exit code: %d\n", exitcode);
-        }
+
         /*exitcode == 5 waiting for next CPU allocation
          *  */
         if ((lang == 3 && exitcode == 17) || exitcode == 0x05 || exitcode == 0){
