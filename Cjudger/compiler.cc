@@ -54,10 +54,10 @@ int main(int argc, char* argv[]){
 
     chdir(workdir);
     
-    const char * CP_C[] = { "gcc", "Main.c", "-o", "Main","-Wall", "-lm",
+    const char * CP_C[] = { "gcc", "Main.c", "-O2", "-o", "Main","-Wall", "-lm",
                             "--static", "-std=c99", "-DONLINE_JUDGE", NULL
                           };
-    const char * CP_X[] = { "g++", "Main.cc", "-o", "Main", "-Wall",
+    const char * CP_X[] = { "g++", "Main.cc", "-O2", "-o", "Main", "-Wall",
                             "-lm", "--static","-std=c++11", "-DONLINE_JUDGE", NULL
                           };
 	const char * CP_J[] = { "javac", "-J-Xms32m", "-J-Xmx256m", "Main.java",NULL };
