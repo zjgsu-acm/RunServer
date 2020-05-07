@@ -18,7 +18,7 @@ RUN ["/bin/bash", "-c", "echo 'deb http://mirrors.tuna.tsinghua.edu.cn/AdoptOpen
 RUN \
   apt update && \
   apt -y upgrade && \
-  apt -y install gcc-7 g++-7 gdb make dpkg-dev flex adoptopenjdk-8-hotspot && \
+  apt -y install gcc-8 g++-8 gdb make dpkg-dev flex adoptopenjdk-8-hotspot && \
   apt -y install python python-virtualenv python3 python3-virtualenv && \
   mkdir -p /usr/local/cjudger/venv/ && \
   virtualenv --no-setuptools --no-pip --no-wheel -p /usr/bin/python2 /usr/local/cjudger/venv/py2 && \
