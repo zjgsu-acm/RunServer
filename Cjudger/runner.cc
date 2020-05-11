@@ -104,7 +104,7 @@ int execute_cmd(const char * fmt, ...){
 
 const int call_array_size=512;
 int call_counter[call_array_size]= {0};
-static char LANG_NAME[BUFFER_SIZE];
+static char LANG_NAME[BUFFER_SIZE] = "";
 
 //初始化系统调用限制表
 void init_syscalls_limits(int lang){
@@ -557,6 +557,7 @@ int prepare_files(char * filename, char * infile, char * outfile, char * userfil
     sprintf(infile, "%s.in", fname);
     sprintf(outfile, "%s.out", fname);
     sprintf(userfile, "user.out");
+    return 1;
 }
 
 //参数初始化
