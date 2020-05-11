@@ -56,45 +56,45 @@ static char record_call = 0;
 
 char work_dir[1024];
 
-static char lang_ext[5][8] = { "c", "cc", "java", "py2", "py3"};
+static char lang_ext[5][8] = {"c", "cc", "java", "py2", "py3"};
 static int time_lmt = 5, mem_lmt = 128, lang;//单位是second and MB
 
 //获取文件大小
-long get_file_size(const char * filename){
+long get_file_size(const char *filename) {
     struct stat f_stat;
-    if (stat(filename, &f_stat) == -1){
+    if (stat(filename, &f_stat) == -1) {
         return 0;
     }
     return (long) f_stat.st_size;
 }
 
 //将log信息写入oj_home/log/client.log文件
-void write_log(const char *fmt, ...){
+void write_log(const char *fmt, ...) {
     va_list ap;
     char buffer[4096];
-    sprintf(buffer,"%s/client.log", getenv("LOG_PATH"));
-    
+    sprintf(buffer, "%s/client.log", getenv("LOG_PATH"));
+
     FILE *fp = fopen(buffer, "a+");
-    if (fp == NULL){
+    if (fp == NULL) {
         fprintf(stderr, "openfile error!\n");
         return;
     }
-    
+
     va_start(ap, fmt);
     vsprintf(buffer, fmt, ap);
     fprintf(fp, "%s\n", buffer);
-    
+
     va_end(ap);
     fclose(fp);
 }
 
 //执行命令
-int execute_cmd(const char * fmt, ...){
+int execute_cmd(const char *fmt, ...) {
     char cmd[BUFFER_SIZE];
-    
+
     int ret = 0;
     va_list ap;
-    
+
     va_start(ap, fmt);
     vsprintf(cmd, fmt, ap);
     ret = system(cmd);
@@ -102,62 +102,64 @@ int execute_cmd(const char * fmt, ...){
     return ret;
 }
 
-const int call_array_size=512;
-int call_counter[call_array_size]= {0};
+const int call_array_size = 512;
+int call_counter[call_array_size] = {0};
 static char LANG_NAME[BUFFER_SIZE] = "";
 
 //初始化系统调用限制表
-void init_syscalls_limits(int lang){
+void init_syscalls_limits(int lang) {
     int i;
     memset(call_counter, 0, sizeof(call_counter));
-    if (DEBUG){
+    if (DEBUG) {
         write_log("init_call_counter:%d", lang);
     }
-    
-    if (record_call){   // C & C++
-        for (i = 0; i<call_array_size; i++){
+
+    int *p = nullptr;
+    if (record_call) {   // C & C++
+        for (i = 0; i < call_array_size; i++) {
             call_counter[i] = 0;
         }
-    }else if (lang <= LangCC){    // C & C++
-        for (i = 0; LANG_CC[i]; i++){
-            call_counter[LANG_CV[i]] = LANG_CC[i];
+    } else if (lang <= LangCC) {    // C & C++
+        p = LANG_CV;
+    } else if (lang == LangJava) {     // Java
+        p = LANG_JV;
+    } else if (lang == LangPy2 || lang == LangPy3) { // py2 & py3
+        p = LANG_PV;
+    }
+    if (p != nullptr) {
+        for (i = 0; i == 0 || p[i]; i++) {
+            call_counter[p[i]] = HOJ_MAX_LIMIT;
         }
-    }else if (lang == LangJava){     // Java
-        for (i = 0; LANG_JC[i]; i++)
-            call_counter[LANG_JV[i]] = LANG_JC[i];
-    }else if(lang == LangPy2 || lang == LangPy3){ // py2 & py3
-        for (i = 0; i == 0 || LANG_PV[i]; i++)
-			call_counter[LANG_PV[i]] = HOJ_MAX_LIMIT;
     }
 }
 
 
-
-void find_next_nonspace(int & c1, int & c2, FILE *& f1, FILE *& f2, int & ret){
+void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret) {
     // Find the next non-space character or \n.
-    while ((isspace(c1)) || (isspace(c2))){
-        if (c1 != c2){
-            if (c2 == EOF){
-                do{
+    while ((isspace(c1)) || (isspace(c2))) {
+        if (c1 != c2) {
+            if (c2 == EOF) {
+                do {
                     c1 = fgetc(f1);
-                }while (isspace(c1));
+                } while (isspace(c1));
                 continue;
-            }else if (c1 == EOF){
-                do{
+            } else if (c1 == EOF) {
+                do {
                     c2 = fgetc(f2);
-                }while (isspace(c2));
+                } while (isspace(c2));
                 continue;
-            }else if ((c1 == '\r' && c2 == '\n')){
+            } else if ((c1 == '\r' && c2 == '\n')) {
                 c1 = fgetc(f1);
-            }else if ((c2 == '\r' && c1 == '\n')){
+            } else if ((c2 == '\r' && c1 == '\n')) {
                 c2 = fgetc(f2);
-            }else{
+            } else {
                 ret = JudgePE;
             }
         }
-        if (isspace(c1)){
+        if (isspace(c1)) {
             c1 = fgetc(f1);
-        }if (isspace(c2)){
+        }
+        if (isspace(c2)) {
             c2 = fgetc(f2);
         }
     }
@@ -170,41 +172,32 @@ void find_next_nonspace(int & c1, int & c2, FILE *& f1, FILE *& f2, int & ret){
  *
  */
 //比较用户输出和标准数据
-int compare(const char *file1, const char *file2)
-{
+int compare(const char *file1, const char *file2) {
     int ret = JudgeAC;
-    int c1,c2;
-    FILE * f1, *f2 ;
+    int c1, c2;
+    FILE *f1, *f2;
     f1 = fopen(file1, "r");
     f2 = fopen(file2, "r");
-    if (!f1 || !f2)
-    {
+    if (!f1 || !f2) {
         ret = JudgeRE;
-    }
-    else
-        for (;;)
-        {
+    } else
+        for (;;) {
             // Find the first non-space character at the beginning of line.
             // Blank lines are skipped.
             c1 = fgetc(f1);
             c2 = fgetc(f2);
             find_next_nonspace(c1, c2, f1, f2, ret);
             // Compare the current line.
-            for (;;)
-            {
+            for (;;) {
                 // Read until 2 files return a space or 0 together.
-                while ((!isspace(c1) && c1) || (!isspace(c2) && c2))
-                {
-                    if (c1 == EOF && c2 == EOF)
-                    {
+                while ((!isspace(c1) && c1) || (!isspace(c2) && c2)) {
+                    if (c1 == EOF && c2 == EOF) {
                         goto end;
                     }
-                    if (c1 == EOF || c2 == EOF)
-                    {
+                    if (c1 == EOF || c2 == EOF) {
                         break;
                     }
-                    if (c1 != c2)
-                    {
+                    if (c1 != c2) {
                         // Consecutive non-space characters should be all exactly the same
                         ret = JudgeWA;
                         goto end;
@@ -213,23 +206,20 @@ int compare(const char *file1, const char *file2)
                     c2 = fgetc(f2);
                 }
                 find_next_nonspace(c1, c2, f1, f2, ret);
-                if (c1 == EOF && c2 == EOF)
-                {
+                if (c1 == EOF && c2 == EOF) {
                     goto end;
                 }
-                if (c1 == EOF || c2 == EOF)
-                {
+                if (c1 == EOF || c2 == EOF) {
                     ret = JudgeWA;
                     goto end;
                 }
-                
-                if ((c1 == '\n' || !c1) && (c2 == '\n' || !c2))
-                {
+
+                if ((c1 == '\n' || !c1) && (c2 == '\n' || !c2)) {
                     break;
                 }
             }
         }
-end:
+    end:
     // if(ret==JudgeWA)make_diff_out(f1,f2,c1,c2,file1);
     if (f1)
         fclose(f1);
@@ -240,45 +230,45 @@ end:
 
 
 //获取进程状态
-int get_proc_status(int pid, const char * mark){
-    FILE * pf;
+int get_proc_status(int pid, const char *mark) {
+    FILE *pf;
     char fn[BUFFER_SIZE], buf[BUFFER_SIZE];
     int ret = 0;
-    
+
     sprintf(fn, "/proc/%d/status", pid);
-    
+
     pf = fopen(fn, "r");
 
-    if(pf == NULL) {
-        char * mesg = strerror(errno);
+    if (pf == NULL) {
+        char *mesg = strerror(errno);
         write_log("Open %s error: %s", fn, mesg);
         return 0;
     }
 
     int m = strlen(mark);
-    while (pf && fgets(buf, BUFFER_SIZE - 1, pf)){
+    while (pf && fgets(buf, BUFFER_SIZE - 1, pf)) {
         buf[strlen(buf) - 1] = 0;
-        if (strncmp(buf, mark, m) == 0){
+        if (strncmp(buf, mark, m) == 0) {
             sscanf(buf + m + 1, "%d", &ret);
         }
     }
-    
-    if(pf){
+
+    if (pf) {
         fclose(pf);
     }
-    
+
     return ret;
 }
 
 //运行编译后的程序
-void run_solution(char *infile, int &usedtime){
+void run_solution(char *infile, int &usedtime) {
     nice(19);
-    
+
     // open the files
     freopen(infile, "r", stdin);
     freopen("user.out", "w", stdout);
     freopen("error.out", "w", stderr);
-    if(DEBUG){
+    if (DEBUG) {
         write_log("infile: %s\n", infile);
     }
 
@@ -286,58 +276,59 @@ void run_solution(char *infile, int &usedtime){
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 
     // run me
-    if (lang != LangJava && lang != LangPy2 && lang != LangPy3){
+    if (lang != LangJava && lang != LangPy2 && lang != LangPy3) {
         chroot(work_dir);
     }
-    
-    
+
+
     struct rlimit LIM; // time limit, file limit& memory limit
     // time limit
-    
+
     LIM.rlim_cur = (time_lmt - usedtime / 1000) + 1;
     LIM.rlim_max = LIM.rlim_cur;
 
     setrlimit(RLIMIT_CPU, &LIM);
     alarm(0);
-    alarm(time_lmt*10);
-    
+    alarm(time_lmt * 10);
+
     // file limit
     LIM.rlim_max = STD_F_LIM + STD_MB;
     LIM.rlim_cur = STD_F_LIM;
     setrlimit(RLIMIT_FSIZE, &LIM);
-    
+
     // proc limit
-    if(lang == LangJava){  //java
+    if (lang == LangJava) {  //java
         LIM.rlim_cur = LIM.rlim_max = 1000;
-    }else if(lang == LangPy2 || lang == LangPy3){
+    } else if (lang == LangPy2 || lang == LangPy3) {
         LIM.rlim_cur = LIM.rlim_max = 200;
-    }else{
+    } else {
         LIM.rlim_cur = LIM.rlim_max = 1;
     }
-    
+
     setrlimit(RLIMIT_NPROC, &LIM);
-    
+
     // set the stack
     LIM.rlim_cur = STD_MB << 6;
     LIM.rlim_max = STD_MB << 6;
     setrlimit(RLIMIT_STACK, &LIM);
     // set the memory
-    LIM.rlim_cur = STD_MB *mem_lmt/2*3;
-    LIM.rlim_max = STD_MB *mem_lmt*2;
-    if(lang != LangJava && lang != LangPy2 && lang != LangPy3){
+    LIM.rlim_cur = STD_MB * mem_lmt / 2 * 3;
+    LIM.rlim_max = STD_MB * mem_lmt * 2;
+    if (lang != LangJava && lang != LangPy2 && lang != LangPy3) {
         setrlimit(RLIMIT_AS, &LIM);
     }
     int rst = 0;
-    if(lang == LangC || lang ==LangCC){
-        rst = execl("./Main", "./Main", (char *)NULL);
-    }else if(lang == LangJava){
-        rst = execl("/usr/bin/java", "/usr/bin/java", "-Xms128M", "-Xms512M",  "-Djava.security.manager", "-Djava.security.policy=./java.policy", "-DONLINE_JUDGE=true", "Main", (char *)NULL );
-    }else if(lang == LangPy2){
-        rst = execl("/usr/local/cjudger/py2", "/usr/local/cjudger/py2", "./Main.py2", (char *)NULL);
-    }else if(lang == LangPy3){
-        rst = execl("/usr/local/cjudger/py3", "/usr/local/cjudger/py3", "./Main.py3", (char *)NULL);
+    if (lang == LangC || lang == LangCC) {
+        rst = execl("./Main", "./Main", (char *) NULL);
+    } else if (lang == LangJava) {
+        rst = execl("/usr/bin/java", "/usr/bin/java", "-Xms128M", "-Xms512M", "-Djava.security.manager",
+                    "-Djava.security.policy=./java.policy", "-DONLINE_JUDGE=true", "Main", (char *) NULL);
+    } else if (lang == LangPy2) {
+        rst = execl("/usr/local/cjudger/py2", "/usr/local/cjudger/py2", "./Main.py2", (char *) NULL);
+    } else if (lang == LangPy3) {
+        rst = execl("/usr/local/cjudger/py3", "/usr/local/cjudger/py3", "./Main.py3", (char *) NULL);
     }
-    if(rst == -1){
+    if (rst == -1) {
         fprintf(stderr, "%s", strerror(errno));
     }
     exit(0);
@@ -345,112 +336,112 @@ void run_solution(char *infile, int &usedtime){
 
 //评判用户 solution 的结果
 void judge_solution(
-    int &judge_flag, int usedtime, int topmemory, char *outfile, char *userfile){
+        int &judge_flag, int usedtime, int topmemory, char *outfile, char *userfile) {
 
-    if (usedtime > time_lmt * 1000){
+    if (usedtime > time_lmt * 1000) {
         judge_flag = JudgeTLE;
         return;
     }
-    
-    if(topmemory > mem_lmt * STD_MB){
+
+    if (topmemory > mem_lmt * STD_MB) {
         judge_flag = JudgeMLE;
         return;
     }
-    
+
     // compare 标准输出和用户输出
     judge_flag = compare(outfile, userfile);
-    
+
 }
 
-int get_page_fault_mem(struct rusage & ruse, pid_t & pidApp){
+int get_page_fault_mem(struct rusage &ruse, pid_t &pidApp) {
     //java use pagefault
     int m_minflt;
     m_minflt = ruse.ru_minflt * getpagesize();
-    
-    if (DEBUG){
+
+    if (DEBUG) {
         int m_vmpeak = get_proc_status(pidApp, "VmPeak:");
         int m_vmdata = get_proc_status(pidApp, "VmData:");
         fprintf(stderr, "VmPeak:%d KB VmData:%d KB minflt:%d KB\n", m_vmpeak, m_vmdata,
-               m_minflt >> 10);
+                m_minflt >> 10);
     }
     return m_minflt;
 }
 
 //输出运行错误
-void print_runtimeerror(char * err){
-    FILE *ferr=fopen("error.out","a+");
-    fprintf(ferr,"Runtime Error:%s\n",err);
+void print_runtimeerror(char *err) {
+    FILE *ferr = fopen("error.out", "a+");
+    fprintf(ferr, "Runtime Error:%s\n", err);
     fclose(ferr);
 }
 
 //观察用户程序运行
 void watch_solution(
-        pid_t pidApp, char *userfile, char *outfile, int &judge_flag, int &topmemory, int &usedtime){
+        pid_t pidApp, char *userfile, char *outfile, int &judge_flag, int &topmemory, int &usedtime) {
     // parent
     int tempmemory;
-    
-    if (DEBUG){
+
+    if (DEBUG) {
         fprintf(stderr, "pid=%d judging\n", pidApp);
     }
-    
+
     int status, sig, exitcode;
     struct user_regs_struct reg;
     struct rusage ruse;
     int sub = 0;
-    while (1){
+    while (1) {
         // check the usage
         wait4(-1, &status, 0, &ruse);
-        
+
         //jvm gc ask VM before need,so used kernel page fault times and page size
-        if (lang == LangJava){
+        if (lang == LangJava) {
             tempmemory = get_page_fault_mem(ruse, pidApp);
-        }else{    //other use VmPeak
+        } else {    //other use VmPeak
             tempmemory = get_proc_status(pidApp, "VmHWM:") << 10;
-            if(DEBUG) {
-                write_log("VmHWM %d, VmData %d", get_proc_status(pidApp,"VmHWM:"), get_proc_status(pidApp,"VmData:"));
+            if (DEBUG) {
+                write_log("VmHWM %d, VmData %d", get_proc_status(pidApp, "VmHWM:"), get_proc_status(pidApp, "VmData:"));
             }
-            if(tempmemory == 0) {
+            if (tempmemory == 0) {
                 tempmemory = get_page_fault_mem(ruse, pidApp);
             }
         }
-        
-        if (tempmemory > topmemory){
+
+        if (tempmemory > topmemory) {
             topmemory = tempmemory;
         }
-        
-        if (topmemory > mem_lmt * STD_MB){
-            if (DEBUG){
+
+        if (topmemory > mem_lmt * STD_MB) {
+            if (DEBUG) {
                 fprintf(stderr, "out of memory %d\n", topmemory);
             }
-            
+
             judge_flag = JudgeMLE;
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
-        
+
         int tmptime = usedtime + (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);
         tmptime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000);
-        if(tmptime >= time_lmt*1000){
+        if (tmptime >= time_lmt * 1000) {
             judge_flag = JudgeTLE;
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
-        
-        if (get_file_size("error.out")){
-            if(DEBUG) fprintf(stderr, "Found Error.out: %d\n", get_file_size("error.out"));
+
+        if (get_file_size("error.out")) {
+            if (DEBUG) fprintf(stderr, "Found Error.out: %d\n", get_file_size("error.out"));
             judge_flag = JudgeRE;
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
 
         exitcode = WEXITSTATUS(status);
-        if(DEBUG) fprintf(stderr, "ExitCode: %d\n", exitcode);
+        if (DEBUG) fprintf(stderr, "ExitCode: %d\n", exitcode);
 
-        if (WIFEXITED(status)){
+        if (WIFEXITED(status)) {
             break;
         }
-        
-        if (get_file_size(userfile) > get_file_size(outfile) * 2+1024){
+
+        if (get_file_size(userfile) > get_file_size(outfile) * 2 + 1024) {
             judge_flag = JudgeOLE;
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
@@ -458,12 +449,12 @@ void watch_solution(
 
         /*exitcode == 5 waiting for next CPU allocation
          *  */
-        if ((lang == 3 && exitcode == 17) || exitcode == 0x05 || exitcode == 0){
+        if ((lang == 3 && exitcode == 17) || exitcode == 0x05 || exitcode == 0) {
             //go on and on
             ;
-        }else{
+        } else {
             //psignal(exitcode, NULL);
-            switch (exitcode){
+            switch (exitcode) {
                 case SIGCHLD:
                 case SIGALRM:
                     alarm(0);
@@ -481,8 +472,8 @@ void watch_solution(
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
             break;
         }
-        
-        if (WIFSIGNALED(status)){
+
+        if (WIFSIGNALED(status)) {
             /*  WIFSIGNALED: if the process is terminated by signal
              *
              *  psignal(int sig, char *s)，like perror(char *s)，print out s, with error msg from system of sig
@@ -491,12 +482,12 @@ void watch_solution(
              * sig = 25 means File size limit exceeded
              */
             sig = WTERMSIG(status);
-            
-            if (DEBUG){
+
+            if (DEBUG) {
                 fprintf(stderr, "WTERMSIG=%d\n", sig);
                 psignal(sig, NULL);
             }
-            switch (sig){
+            switch (sig) {
                 case SIGCHLD:
                 case SIGALRM:
                     alarm(0);
@@ -513,47 +504,47 @@ void watch_solution(
             print_runtimeerror(strsignal(sig));
             break;
         }
-        
+
         // check the system calls
         ptrace(PTRACE_GETREGS, pidApp, NULL, &reg);
-        
-        if (!record_call&&call_counter[reg.REG_SYSCALL] == 0) {   //do not limit JVM syscall for using different JVM
+
+        if (!record_call && call_counter[reg.REG_SYSCALL] == 0) {   //do not limit JVM syscall for using different JVM
             judge_flag = JudgeRE;
             char error[BUFFER_SIZE];
-            sprintf(error,"[ERROR] A Not allowed system call! callid:%llu\n",reg.REG_SYSCALL);
+            sprintf(error, "[ERROR] A Not allowed system call! callid:%llu\n", reg.REG_SYSCALL);
             write_log(error);
             print_runtimeerror(error);
             ptrace(PTRACE_KILL, pidApp, NULL, NULL);
-        }else if(record_call){
+        } else if (record_call) {
             call_counter[reg.REG_SYSCALL] = 1;
-        }else{
-            if (sub == 1 && call_counter[reg.REG_SYSCALL] > 0){
+        } else {
+            if (sub == 1 && call_counter[reg.REG_SYSCALL] > 0) {
                 call_counter[reg.REG_SYSCALL]--;
             }
         }
         sub = 1 - sub;
-        
+
         ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
     }
-    
+
     usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000);
     usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000);
 }
 
 //准备测试文件
-int prepare_files(char * filename, char * infile, char * outfile, char * userfile){
+int prepare_files(char *filename, char *infile, char *outfile, char *userfile) {
     int l = strlen(filename);
-    
+
     // 检查是否为 .in 文件
-    if (l <= 3 || strcmp(filename + l - 3, ".in") != 0){
+    if (l <= 3 || strcmp(filename + l - 3, ".in") != 0) {
         return 0;
     }
-    
+
     // 得到 .in 文件前缀
-    char  fname[BUFFER_SIZE];
-    strncpy(fname, filename,  l - 3);
-    fname[l-3] = 0;
-    
+    char fname[BUFFER_SIZE];
+    strncpy(fname, filename, l - 3);
+    fname[l - 3] = 0;
+
     sprintf(infile, "%s.in", fname);
     sprintf(outfile, "%s.out", fname);
     sprintf(userfile, "user.out");
@@ -561,53 +552,53 @@ int prepare_files(char * filename, char * infile, char * outfile, char * userfil
 }
 
 //参数初始化
-void init_parameters(int argc, char **argv){
-    if (argc < 4){
+void init_parameters(int argc, char **argv) {
+    if (argc < 4) {
         fprintf(stderr, "Usage:%s [language] [time limit] [memory limit] [run path]\n", argv[0]);
         exit(1);
     }
-    
+
     lang = atoi(argv[1]);
     time_lmt = atoi(argv[2]);
     mem_lmt = atoi(argv[3]) * 1024 / STD_MB;
-    sprintf(work_dir,"%s", argv[4]);
-    
+    sprintf(work_dir, "%s", argv[4]);
+
     //java is lucky
-    if (lang == LangJava){
+    if (lang == LangJava) {
         // the limit for java
         time_lmt = time_lmt * 2;
         mem_lmt = mem_lmt * 2;
-        execute_cmd( "cp /etc/java-8-openjdk/security/java.policy %s/java.policy", work_dir);
-    }else if (lang == LangPy2 || lang == LangPy3){
+        execute_cmd("cp /etc/java-8-openjdk/security/java.policy %s/java.policy", work_dir);
+    } else if (lang == LangPy2 || lang == LangPy3) {
         // the limit for python
         time_lmt = time_lmt * 2;
         mem_lmt = mem_lmt * 2;
     }
-    
+
     //never bigger than judged set value;
-    if (time_lmt > 30 || time_lmt < 1){
+    if (time_lmt > 30 || time_lmt < 1) {
         time_lmt = 30;
     }
-    
-    if (mem_lmt > 1024 || mem_lmt < 1){
+
+    if (mem_lmt > 1024 || mem_lmt < 1) {
         mem_lmt = 1024;
     }
 }
 
 //输出用户程序的所用系统调用及调用次数
-void print_call_array(){
-    write_log("int LANG_%sV[256]={",LANG_NAME);
-    int i=0;
-    for (i = 0; i<call_array_size; i++){
-        if(call_counter[i]){
-            write_log("%d,",i);
+void print_call_array() {
+    write_log("int LANG_%sV[256]={", LANG_NAME);
+    int i = 0;
+    for (i = 0; i < call_array_size; i++) {
+        if (call_counter[i]) {
+            write_log("%d,", i);
         }
     }
     write_log("0};\n");
-    
-    write_log("int LANG_%sC[256]={",LANG_NAME);
-    for (i = 0; i<call_array_size; i++){
-        if(call_counter[i]){
+
+    write_log("int LANG_%sC[256]={", LANG_NAME);
+    for (i = 0; i < call_array_size; i++) {
+        if (call_counter[i]) {
             write_log("HOJ_MAX_LIMIT,");
         }
     }
@@ -615,88 +606,88 @@ void print_call_array(){
 }
 
 //judger 程序入口
-int main(int argc, char** argv){
-    
+int main(int argc, char **argv) {
+
     init_parameters(argc, argv);
-    
+
     write_log("time: %d mem: %d\n", time_lmt, mem_lmt);
-    
+
     // cd work_dir
-    if(chdir(work_dir) == -1){
+    if (chdir(work_dir) == -1) {
         write_log("change work_dir %s failed\n", work_dir);
         exit(JudgeNA);
     }
-    
-    
+
+
     // begin run
     char fullpath[BUFFER_SIZE];
     getcwd(fullpath, BUFFER_SIZE);// the fullpath of data dir
-    
+
     // open DIRs
     DIR *dp;
     dirent *dirp;
-    
-    if ((dp = opendir(fullpath)) == NULL){
+
+    if ((dp = opendir(fullpath)) == NULL) {
         write_log("No such dir:%s!\n", fullpath);
         exit(JudgeNA);
     }
-    
+
     int judge_flag = JudgeAC;
     int usedtime = 0, topmemory = 0;
     int count = 0;
-    
+
     // read files and run
-    for (; ( judge_flag == JudgeAC )&& (dirp = readdir(dp)) != NULL;){
-        
+    for (; (judge_flag == JudgeAC) && (dirp = readdir(dp)) != NULL;) {
+
         char infile[BUFFER_SIZE];
         char outfile[BUFFER_SIZE];
         char userfile[BUFFER_SIZE];
-        
-        if (prepare_files(dirp->d_name, infile, outfile, userfile) == 0){
+
+        if (prepare_files(dirp->d_name, infile, outfile, userfile) == 0) {
             continue;
         }
-        
+
         init_syscalls_limits(lang);
-        
-        if(DEBUG){
-            fprintf(stderr, "%s\n",infile);
+
+        if (DEBUG) {
+            fprintf(stderr, "%s\n", infile);
         }
-        
+
         pid_t pidApp = fork();
-        if (pidApp == 0){
+        if (pidApp == 0) {
             run_solution(infile, usedtime);
             exit(0);
-        }else{
+        } else {
             watch_solution(pidApp, userfile, outfile, judge_flag, topmemory, usedtime);
-            
-            if(judge_flag == JudgeAC){
+
+            if (judge_flag == JudgeAC) {
                 judge_solution(judge_flag, usedtime, topmemory, outfile, userfile);
             }
             count += 1;
         }
     }
 
-    if(!count){
+    if (!count) {
         judge_flag = JudgeNA;
     }
-    
-    if(judge_flag == JudgeTLE){
-        usedtime = time_lmt*1000; // s to ms
+
+    if (judge_flag == JudgeTLE) {
+        usedtime = time_lmt * 1000; // s to ms
     }
-    
+
     write_log("result = %d usedtime = %d topmemory = %d", judge_flag, usedtime, topmemory);
-    
-    if(record_call){
+
+    if (record_call) {
         print_call_array();
     }
-    
+
     printf("%d %d %d", judge_flag, usedtime, topmemory);
-    
+
     if (judge_flag == JudgeAC) {
         exit(0);
     } else if (judge_flag == JudgeNA) {
         exit(3);
     }
-    
+
     exit(judge_flag);
 }
