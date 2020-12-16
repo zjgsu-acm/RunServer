@@ -32,6 +32,7 @@ ENV GOPROXY=https://goproxy.cn
 
 RUN mkdir -p $GOPATH/src/github.com/ZJGSU-ACM/
 ADD . $GOPATH/src/github.com/ZJGSU-ACM/RunServer
+Add docker-entrypoint.sh /docker-entrypoint.sh
 
 # Build OJ
 RUN \
@@ -43,5 +44,7 @@ WORKDIR $GOPATH/src
 
 # Expose ports
 EXPOSE 8888
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD RunServer
