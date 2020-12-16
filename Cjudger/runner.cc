@@ -322,7 +322,7 @@ void run_solution(char *infile, int &usedtime) {
         rst = execl("./Main", "./Main", (char *) NULL);
     } else if (lang == LangJava) {
         rst = execl("/usr/bin/java", "/usr/bin/java", "-Xms128M", "-Xms512M", "-Djava.security.manager",
-                    "-Djava.security.policy=./java.policy", "-DONLINE_JUDGE=true", "Main", (char *) NULL);
+                    "-Djava.security.policy=./java.policy", "-Xshare:auto", "-XX:-UsePerfData", "-DONLINE_JUDGE=true", "Main", (char *) NULL);
     } else if (lang == LangPy2) {
         rst = execl("/usr/local/cjudger/py2", "/usr/local/cjudger/py2", "./Main.py2", (char *) NULL);
     } else if (lang == LangPy3) {
