@@ -45,6 +45,6 @@ WORKDIR $GOPATH/src
 # Expose ports
 EXPOSE 8888
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "/docker-entrypoint.sh"]
 
 CMD RunServer
