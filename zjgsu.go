@@ -34,7 +34,8 @@ func (z *ZJGSUJudger) Init(user vjudger.UserInterface) error {
 	log.Println(z.workdir)
 
 	cmd := exec.Command("mkdir", "-p", z.workdir)
-	cmd.Run()
+	err := cmd.Run()
+	log.Printf("mkdir workdir finished with error: %v", err)
 
 	z.files(user, z.workdir)
 	return nil
@@ -94,6 +95,7 @@ func (z *ZJGSUJudger) Submit(user vjudger.UserInterface) error {
 		cmd := exec.Command("cp", "-r", dataPath+"/"+strconv.Itoa(user.GetVid()), runPath+"/"+strconv.Itoa(user.GetSid()))
 		err := cmd.Run()
 		if err != nil {
+			log.Println("copy problem data failed")
 			log.Println(err)
 		}
 	} else {
