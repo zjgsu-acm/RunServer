@@ -35,7 +35,9 @@ func (z *ZJGSUJudger) Init(user vjudger.UserInterface) error {
 
 	cmd := exec.Command("mkdir", "-p", z.workdir)
 	err := cmd.Run()
-	log.Printf("mkdir workdir finished with error: %v", err)
+	if err != nil {
+		log.Printf("mkdir workdir finished with error: %v", err)
+	}
 
 	z.files(user, z.workdir)
 	return nil
