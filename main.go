@@ -119,7 +119,7 @@ func JudgeForever() {
 			info := SyncControll.GetFrontAndRemove()
 			go Judge(*info) //并行判题
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
