@@ -125,7 +125,7 @@ func (z *ZJGSUJudger) GetStatus(user vjudger.UserInterface) error {
 	cmd.Run()
 
 	output := strings.Trim(out.String(), " ")
-	logger.Println("CJudger [%d] output: %s", user.GetSid(), output)
+	logger.Printf("CJudger id: %v, output: %v\n", user.GetSid(), output)
 	if len(output) == 0 {
 		logger.Println("CJudger Result is wrong")
 		user.SetResult(config.JudgeNA)
@@ -134,7 +134,7 @@ func (z *ZJGSUJudger) GetStatus(user vjudger.UserInterface) error {
 	}
 
 	sp := strings.Split(output, " ")
-	if len(sp) != 0 {
+	if len(sp) != 3 {
 		logger.Println("CJudger result split siz is wrong")
 		user.SetResult(config.JudgeNA)
 		user.SetResource(0, 0, len(user.GetCode()))
