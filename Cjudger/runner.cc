@@ -50,6 +50,8 @@
 
 const int DEBUG = 0;
 
+unsigned int random_id = 0;
+
 //record system call
 //标志：是否记录系统系统调用
 static char record_call = 0;
@@ -79,6 +81,8 @@ void write_log(const char *fmt, ...) {
         fprintf(stderr, "openfile error!\n");
         return;
     }
+
+    fprintf(fp, "[%u]: ", random_id);
 
     va_start(ap, fmt);
     vsprintf(buffer, fmt, ap);
@@ -607,6 +611,8 @@ void print_call_array() {
 
 //judger 程序入口
 int main(int argc, char **argv) {
+
+    random_id = (unsigned int)time(nullptr);
 
     init_parameters(argc, argv);
 
