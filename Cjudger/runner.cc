@@ -647,6 +647,7 @@ int main(int argc, char **argv) {
     for (; (judge_flag == JudgeAC) && (dirp = readdir(dp)) != NULL;) {
 
         empty = 0;
+        write_log("find file: %s", dirp->d_name);
 
         char infile[BUFFER_SIZE];
         char outfile[BUFFER_SIZE];
