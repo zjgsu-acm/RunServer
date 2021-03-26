@@ -124,17 +124,33 @@ func (z *ZJGSUJudger) GetStatus(user vjudger.UserInterface) error {
 	cmd.Stdout = &out
 	cmd.Run()
 
-	sp := strings.Split(out.String(), " ")
+	output := strings.Trim(out.String(), " ")
+	logger.Println("CJudger [%d] output: %s", user.GetSid(), output)
+	if len(output) == 0 {
+		logger.Println("CJudger Result is wrong")
+		user.SetResult(config.JudgeNA)
+		user.SetResource(0, 0, len(user.GetCode()))
+		return nil
+	}
+
+	sp := strings.Split(output, " ")
+	if len(sp) != 0 {
+		logger.Println("CJudger result split siz is wrong")
+		user.SetResult(config.JudgeNA)
+		user.SetResource(0, 0, len(user.GetCode()))
+		return nil
+	}
 	var err error
-	Result, err := strconv.Atoi(sp[0])
+	var Result, Time, Mem int
+	Result, err = strconv.Atoi(sp[0])
 
 	if err != nil {
 		logger.Println(err)
 		logger.Println(Result)
 	}
 	user.SetResult(Result)
-	Time, _ := strconv.Atoi(sp[1])
-	Mem, _ := strconv.Atoi(sp[2])
+	Time, err = strconv.Atoi(sp[1])
+	Mem, err = strconv.Atoi(sp[2])
 	Mem = Mem / 1024 //b->Kb
 	user.SetResource(Time, Mem, len(user.GetCode()))
 	return nil
